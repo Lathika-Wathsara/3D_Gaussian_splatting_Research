@@ -481,9 +481,22 @@ class GaussianModel:
         replicated_tensor = max_row.unsqueeze(0).repeat(a, 1, 1) #repeat the max row a times.
         return replicated_tensor
     """
+    # Scale comparison
+    def compare_scales(self,tensor_1, tensor_2):
+        # Element-wise subtraction and division
+        percentage_diff = ((tensor_1 - tensor_2) / tensor_2) * 100
+
+        # Define intervals
+        bins = torch.arange(-100, 110, 10)  # Bins from -100 to 100 with step 10
+        hist = torch.histc(percentage_diff, bins=len(bins)-1, min=-100, max=100)  # Count elements per bin
+
+        # Print the intervals and counts
+        for i in range(len(bins) - 1):
+            print(f"[{bins[i].item()}, {bins[i+1].item()}): {int(hist[i].item())}")
+
         
     # Code by lathika
-    def blur_densify(self, new_means_3d, related_gaussian_idx, new_scales, radii):  # Try to remove radii (not needed)
+    def blur_densify(self, new_means_3d, related_gaussian_idx, new_scales, radii, test):  # Try to remove radii (not needed)
         new_xyz = new_means_3d #self._xyz[related_gaussian_idx]
         new_features_dc = self._features_dc[related_gaussian_idx]
         new_features_rest = self._features_rest[related_gaussian_idx]
@@ -502,6 +515,14 @@ class GaussianModel:
         new_opacities = self._opacity[related_gaussian_idx]
         new_scaling = self.scaling_inverse_activation(new_scales) #self._scaling[related_gaussian_idx]
         new_rotation = self._rotation[related_gaussian_idx]
+
+        # Test
+        """
+        if test==1:
+            new_scales_ = self.get_scaling[related_gaussian_idx]
+            print(f"new_scales_ shape = {new_scales_.shape}, new_scales shape = {new_scales.shape}")
+            self.compare_scales(new_scales, new_scales_)"
+        """
 
         self.tmp_radii = radii  # Raise an error without this but we dont need this
         new_tmp_radii = self.tmp_radii[related_gaussian_idx]

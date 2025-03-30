@@ -41,10 +41,10 @@ class Scene:
         self.test_cameras = {}
 
         if os.path.exists(os.path.join(args.source_path, "sparse")):
-            scene_info = sceneLoadTypeCallbacks["Colmap"](args.source_path, args.images, args.depths, args.eval, args.train_test_exp, args.ortho_gauss, bopt.voxel_size) # Code by lathika - added ortho_gauss and voxel_size
+            scene_info = sceneLoadTypeCallbacks["Colmap"](args.source_path, args.images, args.depths, args.eval, args.train_test_exp, args.ortho_gauss and bopt.activate_downsampling, bopt.voxel_size) # Code by lathika - added ortho_gauss and bopt.activate_downsampling, voxel_size
         elif os.path.exists(os.path.join(args.source_path, "transforms_train.json")):
             print("Found transforms_train.json file, assuming Blender data set!")
-            scene_info = sceneLoadTypeCallbacks["Blender"](args.source_path, args.white_background, args.depths, args.eval, args.ortho_gauss, bopt.voxel_size)   # Code by lathika - added ortho_gauss
+            scene_info = sceneLoadTypeCallbacks["Blender"](args.source_path, args.white_background, args.depths, args.eval, args.ortho_gauss and bopt.activate_downsampling, bopt.voxel_size)   # Code by lathika - added args.ortho_gauss and bopt.activate_downsampling, voxel_size
         else:
             assert False, "Could not recognize scene type!"
 

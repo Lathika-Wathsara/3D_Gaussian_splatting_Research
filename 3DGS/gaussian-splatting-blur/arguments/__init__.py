@@ -105,21 +105,23 @@ class OptimizationParams(ParamGroup):
 # Code by lathika - for testing and optimizing the parameters
 class OptimizeBlurParams(ParamGroup):
     def __init__(self, parser):
-        self.voxel_size = 0.05
-        self.sigma_base = 2**0.5
-        self.num_of_stages = 6
-        self.blur_densify_until_stage = self.num_of_stages # - 1
-        self.blur_stage_divider_pow = np.exp(0.5) # (0 init) Test wth the range of [-2,2], 0 means, equal divides
+        self.activate_downsampling = True
+        self.voxel_size = 0.1#0.05 prefered 
+        self.sigma_base = 2**0.5    # 1.5,3,4
+        self.num_of_stages = 6      # 4,8
+        self.blur_densify_until_stage = self.num_of_stages # - 1    # (self.num_of_stages, self.num_of_stages-2)
+        self.blur_stage_divider_pow = np.exp(-0.3) # (0 init) Test wth the range of [-1,1] #[-2,2], 0 means, equal divides
+        self.activate_blur_densify = True
         self.blur_until_iter = 15_000   # Same as densify_until_iter for now, make this a very high value to ignore
-        self.blur_densify_interval = 20
-        self.blur_densify_method = 1    # Methods {1: densify ranges are decided by portions of the stage duration (ex: start densify after 0.1 and end after 0.5 from stage duration),
+        self.blur_densify_interval = 20 # [5,10,20,50,100]
+        self.blur_densify_method = 2    # Methods {1: densify ranges are decided by portions of the stage duration (ex: start densify after 0.1 and end after 0.5 from stage duration),
                                         #          2: densify ranges are given as iterations (ex: start densify after 50 and end after 500 from stage start)}
-        self.blur_in_stage_densify_start_portion = 0
-        self.blur_in_stage_densify_end_portion = 0.1
-        self.blur_in_stage_densify_start_after_iter = 0
+        self.blur_in_stage_densify_start_portion = 0 # prefer to have at 0
+        self.blur_in_stage_densify_end_portion = 0.1    
+        self.blur_in_stage_densify_start_after_iter = 0 # prefer to have at 0
         self.blur_in_stage_densify_end_after_iter = 100
-        self.blur_with_rendered_image = False
-        self.residual_portion = 10
+        self.use_rendered_image = False
+        self.residual_portion = 5 #10
         super().__init__(parser, "Blur Optimization Parameters")
         
 

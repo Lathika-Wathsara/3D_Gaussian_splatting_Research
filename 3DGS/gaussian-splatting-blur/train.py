@@ -51,8 +51,8 @@ except:
     SPARSE_ADAM_AVAILABLE = False
 
 
-# Code by lathika
-def densify_func(dataset, opt, iteration, gaussians, visibility_filter, viewspace_point_tensor, scene, radii):
+# Code by lathika - nothing new
+def densify_func_adc(dataset, opt, iteration, gaussians, visibility_filter, viewspace_point_tensor, scene, radii):
     if dataset.ortho_gauss:
         if iteration < opt.densify_until_iter:
             # Keep track of max radii in image-space for pruning
@@ -297,17 +297,23 @@ def training(dataset, opt, bopt, pipe, testing_iterations, saving_iterations, ch
             # Densification
             
             # Code by lathika
-            blur_densify_interval = bopt.blur_densify_interval #10 # Test, put this inside argument (opt) 
-            if (bopt.blur_densify_method ==1):
-                densify_low = low + math.floor((high-low)*bopt.blur_in_stage_densify_start_portion)
-                densify_high = low + math.floor((high-low)*bopt.blur_in_stage_densify_end_portion)
-            else:
-                densify_low = low + bopt.blur_in_stage_densify_start_after_iter
-                densify_high = low + bopt.blur_in_stage_densify_end_after_iter
+            if dataset.ortho_gauss and bopt.activate_blur_densify:
+                blur_densify_interval = bopt.blur_densify_interval  
+                if (bopt.blur_densify_method ==1):
+                    densify_low = low + math.floor((high-low)*bopt.blur_in_stage_densify_start_portion)
+                    densify_high = low + math.floor((high-low)*bopt.blur_in_stage_densify_end_portion)
+                else:
+                    densify_low = low + bopt.blur_in_stage_densify_start_after_iter
+                    densify_high = low + bopt.blur_in_stage_densify_end_after_iter
 
-            if dataset.ortho_gauss:
+                # Test scales
+                test =0
+                if (densify_low  <= iteration < densify_low + blur_densify_interval):
+                    test = 1
+
+            
                 if (bopt.blur_densify_until_stage>stage>1) and (densify_low <= iteration < densify_high) and (iteration%blur_densify_interval == 0):
-                    if (bopt.blur_with_rendered_image):
+                    if (bopt.use_rendered_image):
                         image_compare = image
                     else:
                         sigma_2 = sigma_base**(num_of_stages-stage)    # For testing, when stage ==1 sigma_2 will be 4*root(2), need to think more
@@ -324,7 +330,8 @@ def training(dataset, opt, bopt, pipe, testing_iterations, saving_iterations, ch
                     tanfovx, tanfovy = math.tan(viewpoint_cam.FoVx * 0.5), math.tan(viewpoint_cam.FoVy * 0.5)
                     H, W = depth_extract.shape
                     new_scales = get_world_scales(sigma, viewpoint_cam.world_view_transform, tanfovx, tanfovy, orig_coordinates,H, W)            
-                    gaussians.blur_densify(orig_coordinates, gaussian_indexes, new_scales, radii)   # We dont need radii
+                    gaussians.blur_densify(orig_coordinates, gaussian_indexes, new_scales, radii, test)   # Added "test" for testing  # We dont need radii  
+                    test  =0 # test
                     radii = gaussians.tmp_radii
 
                     # Test
@@ -346,7 +353,7 @@ def training(dataset, opt, bopt, pipe, testing_iterations, saving_iterations, ch
                     #break
 
             # Code by lathika
-            densify_func(dataset, opt, iteration, gaussians, visibility_filter, viewspace_point_tensor, scene, radii)
+            densify_func_adc(dataset, opt, iteration, gaussians, visibility_filter, viewspace_point_tensor, scene, radii)
             if iteration == opt.iterations:
                 print(f"Iteration = {iteration}, points = {gaussians._xyz.shape[0]}")
             
